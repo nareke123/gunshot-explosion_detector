@@ -1,0 +1,21 @@
+sample_rate: 16000
+class_names:
+  - gunshot
+  - explosion
+  - normal
+train_split: 0.7
+val_split: 0.15
+test_split: 0.15
+classifier_type: logistic_regression
+smoothing_window: 5
+confidence_threshold: 0.8
+model_save_path: models/classifier.pkl
+label_encoder_path: models/label_encoder.pkl
+features_path: data/processed/features.npy
+labels_path: data/processed/labels.npy
+yamnet_model_url: https://tfhub.dev/google/yamnet/1
+window_length: 0.96
+hop_length: 0.48
+data_raw_dir: data/raw
+data_processed_dir: data/processed
+data_splits_dir: data/splits
