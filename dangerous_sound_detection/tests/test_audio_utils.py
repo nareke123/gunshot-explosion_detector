@@ -2,7 +2,7 @@ from pathlib import Path
 import uuid
 import numpy as np
 import soundfile as sf
-from src.utils.audio import load_audio, preprocess_audio, window_audio
+from src.utils.audio import load_audio, normalize_audio, preprocess_audio, trim_silence, window_audio
 
 def test_load_audio():
     tmp_dir = Path('.tmp')
@@ -20,6 +20,21 @@ def test_preprocess_audio():
     y_proc = preprocess_audio(y, 16000)
     assert y_proc.ndim == 1
     assert np.max(np.abs(y_proc)) <= 1.0
+
+
+def test_preprocess_audio_can_preserve_relative_loudness():
+    y = np.concatenate([np.zeros(1000, dtype=np.float32), np.full(4000, 0.2, dtype=np.float32)])
+    y_proc = preprocess_audio(y, 16000, normalize=False)
+    assert y_proc.ndim == 1
+    assert np.isclose(np.max(np.abs(y_proc)), 0.2)
+
+
+def test_trim_and_normalize_helpers():
+    y = np.concatenate([np.zeros(32, dtype=np.float32), np.array([0.1, -0.2, 0.3], dtype=np.float32)])
+    trimmed = trim_silence(y)
+    normalized = normalize_audio(trimmed)
+    assert trimmed.shape[0] == 3
+    assert np.isclose(np.max(np.abs(normalized)), 1.0)
 
 def test_window_audio_pads_short_signal():
     y = np.ones(4000, dtype=np.float32)

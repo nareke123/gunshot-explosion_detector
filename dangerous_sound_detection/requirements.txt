@@ -1,5 +1,4 @@
-tensorflow>=2.20,<2.22
-tensorflow-hub>=0.16.1,<0.17
+torch>=2.5,<3
 scikit-learn>=1.6,<1.8
 soundfile>=0.13,<0.14
 scipy>=1.14,<1.17
@@ -11,6 +10,5 @@ typer>=0.16,<0.17
 pyyaml>=6.0.2,<7
 pytest>=8.3,<9
 opencv-python>=4.10,<5
-xgboost>=2.1,<3
 joblib>=1.4,<2
 pydantic>=2.8,<3

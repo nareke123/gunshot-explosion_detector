@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import List
+
+from pydantic import BaseModel, Field
 
 class Event(BaseModel):
     label: str
@@ -9,4 +10,7 @@ class Event(BaseModel):
 
 class Prediction(BaseModel):
     source: str
+    confidence_threshold: float | None = None
+    noise_floor_dbfs: float | None = None
     events: List[Event]
+    activities: List[Event] = Field(default_factory=list)

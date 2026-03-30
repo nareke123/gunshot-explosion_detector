@@ -2,30 +2,29 @@ from pathlib import Path
 import uuid
 import numpy as np
 import soundfile as sf
-import joblib
+import torch
+from torch import nn
 from sklearn.preprocessing import LabelEncoder
 from src.inference.predict_audio import predict_audio
 
-class DummyClassifier:
-    def __init__(self, predicted_index: int):
-        self.predicted_index = predicted_index
 
-    def predict_proba(self, features):
-        probs = np.full((len(features), 3), 0.01, dtype=np.float32)
-        probs[:, self.predicted_index] = 0.98
-        return probs
+class DummyClassifier(nn.Module):
+    def __init__(self, predicted_index: int, num_classes: int):
+        super().__init__()
+        self.predicted_index = predicted_index
+        self.num_classes = num_classes
+
+    def forward(self, features):
+        logits = torch.full((features.shape[0], self.num_classes), -4.0, dtype=torch.float32, device=features.device)
+        logits[:, self.predicted_index] = 4.0
+        return logits
 
 class DummyExtractor:
-    def __init__(self, model_url: str):
-        self.model_url = model_url
-
     def extract(self, audio: np.ndarray, sr: int) -> np.ndarray:
         del audio, sr
-        return np.ones((1, 1024), dtype=np.float32)
+        return np.ones((1, 257), dtype=np.float32)
 
-def test_inference_smoke(monkeypatch):
-    monkeypatch.setattr('src.inference.predict_audio.YAMNetExtractor', DummyExtractor)
-
+def test_inference_smoke():
     tmp_dir = Path('.tmp') / f'inference_{uuid.uuid4().hex}'
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -34,26 +33,40 @@ def test_inference_smoke(monkeypatch):
     sf.write(audio_path, y, 16000)
 
     label_encoder = LabelEncoder()
-    label_encoder.fit(['gunshot', 'explosion', 'normal'])
-    gunshot_idx = int(np.where(label_encoder.classes_ == 'gunshot')[0][0])
-    classifier = DummyClassifier(gunshot_idx)
-
-    model_path = tmp_dir / 'classifier.pkl'
-    encoder_path = tmp_dir / 'label_encoder.pkl'
-    joblib.dump(classifier, model_path)
-    joblib.dump(label_encoder, encoder_path)
+    label_encoder.fit(['background', 'sharp_impulse'])
+    event_idx = int(np.where(label_encoder.classes_ == 'sharp_impulse')[0][0])
+    classifier = DummyClassifier(event_idx, len(label_encoder.classes_))
 
     config = {
-        'yamnet_model_url': 'unused',
-        'model_save_path': str(model_path),
-        'label_encoder_path': str(encoder_path),
         'sample_rate': 16000,
         'window_length': 0.96,
         'hop_length': 0.48,
         'confidence_threshold': 0.8,
+        'background_labels': ['background'],
+        'event_labels': ['sharp_impulse'],
+        'alert_labels': ['sharp_impulse'],
+        'model_class_names': ['background', 'sharp_impulse'],
+        'event_gate_min_rms_dbfs': -120.0,
+        'event_gate_min_peak_dbfs': -120.0,
+        'event_gate_min_rms_above_noise_floor_db': 0.0,
+        'event_gate_min_crest_factor': 1.0,
     }
 
-    result = predict_audio(str(audio_path), config)
+    result = predict_audio(
+        str(audio_path),
+        config,
+        extractor=DummyExtractor(),
+        model=classifier,
+        le=label_encoder,
+        device='cpu',
+        include_windows=True,
+    )
     assert 'events' in result
     assert result['events']
-    assert result['events'][0]['label'] == 'gunshot'
+    assert result['events'][0]['label'] == 'sharp_impulse'
+    assert 'activities' in result
+    assert result['activities']
+    assert 'windows' in result
+    assert result['windows']
+    assert result['windows'][0]['predicted_label'] == 'sharp_impulse'
+    assert result['windows'][0]['event_gate']['passed'] is True

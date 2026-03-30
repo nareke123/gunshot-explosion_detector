@@ -1,21 +1,82 @@
 sample_rate: 16000
 class_names:
-  - gunshot
-  - explosion
-  - normal
+  - background
+  - benign_impact
+  - loud_children
+  - vocal_distress
+  - sharp_impulse
+model_class_names:
+  - background
+  - benign_impact
+  - loud_children
+  - vocal_distress
+  - sharp_impulse
+label_groups:
+  background:
+    - background
+    - normal
+    - ambience
+  benign_impact:
+    - benign_impact
+    - desk_move
+    - chair_move
+    - door_slam
+  loud_children:
+    - loud_children
+    - children_playing
+    - children_laughing
+  vocal_distress:
+    - vocal_distress
+    - scream
+    - shout
+    - cry
+  sharp_impulse:
+    - sharp_impulse
+    - gunshot_explosion
+    - gunshot
+    - gunshot1
+    - explosion
+    - explosion1
+    - petard
+    - firecracker
+background_labels:
+  - background
+event_labels:
+  - benign_impact
+  - loud_children
+  - vocal_distress
+  - sharp_impulse
+alert_labels:
+  - vocal_distress
+  - sharp_impulse
 train_split: 0.7
 val_split: 0.15
 test_split: 0.15
-classifier_type: logistic_regression
 smoothing_window: 5
 confidence_threshold: 0.8
-model_save_path: models/classifier.pkl
+merge_gap_seconds: 0.5
+event_gate_min_rms_dbfs: -35.0
+event_gate_min_peak_dbfs: -18.0
+event_gate_min_rms_above_noise_floor_db: 10.0
+event_gate_min_crest_factor: 2.5
+event_gate_noise_floor_percentile: 20.0
+event_gate_history_size: 32
+device: auto
+model_save_path: models/classifier.pt
 label_encoder_path: models/label_encoder.pkl
 features_path: data/processed/features.npy
 labels_path: data/processed/labels.npy
-yamnet_model_url: https://tfhub.dev/google/yamnet/1
 window_length: 0.96
 hop_length: 0.48
+n_fft: 512
+stft_hop_length: 160
+win_length: 400
+hidden_dim: 256
+dropout: 0.2
+use_class_weights: true
+batch_size: 64
+num_epochs: 20
+learning_rate: 0.001
 data_raw_dir: data/raw
 data_processed_dir: data/processed
 data_splits_dir: data/splits
