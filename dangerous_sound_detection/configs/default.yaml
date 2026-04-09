@@ -1,54 +1,31 @@
 sample_rate: 16000
 class_names:
-  - background
-  - benign_impact
-  - loud_children
-  - vocal_distress
-  - sharp_impulse
+  - normal
+  - safety_noise
+  - discipline_violation
+  - danger_noise
 model_class_names:
-  - background
-  - benign_impact
-  - loud_children
-  - vocal_distress
-  - sharp_impulse
+  - normal
+  - safety_noise
+  - discipline_violation
+  - danger_noise
 label_groups:
-  background:
-    - background
+  normal:
     - normal
-    - ambience
-  benign_impact:
-    - benign_impact
-    - desk_move
-    - chair_move
-    - door_slam
-  loud_children:
-    - loud_children
-    - children_playing
-    - children_laughing
-  vocal_distress:
-    - vocal_distress
-    - scream
-    - shout
-    - cry
-  sharp_impulse:
-    - sharp_impulse
-    - gunshot_explosion
-    - gunshot
-    - gunshot1
-    - explosion
-    - explosion1
-    - petard
-    - firecracker
+  safety_noise:
+    - safety_noise
+  discipline_violation:
+    - discipline_violation
+  danger_noise:
+    - danger_noise
 background_labels:
-  - background
+  - normal
 event_labels:
-  - benign_impact
-  - loud_children
-  - vocal_distress
-  - sharp_impulse
+  - safety_noise
+  - discipline_violation
+  - danger_noise
 alert_labels:
-  - vocal_distress
-  - sharp_impulse
+  - danger_noise
 train_split: 0.7
 val_split: 0.15
 test_split: 0.15
@@ -71,12 +48,12 @@ hop_length: 0.48
 n_fft: 512
 stft_hop_length: 160
 win_length: 400
-hidden_dim: 256
-dropout: 0.2
+hidden_dim: 512
+dropout: 0.1
 use_class_weights: true
 batch_size: 64
-num_epochs: 20
-learning_rate: 0.001
-data_raw_dir: data/raw
-data_processed_dir: data/processed
-data_splits_dir: data/splits
+num_epochs: 40
+learning_rate: 0.0005
+data_raw_dir: data/raw_v2
+data_processed_dir: data/processed_v2
+data_splits_dir: data/splits_v2

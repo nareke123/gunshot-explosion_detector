@@ -9,7 +9,7 @@ from src.data.dataset_summary import dataset_summary
 from src.features.feature_pipeline import extract_all_features
 from src.features.yamnet_extractor import YAMNetExtractor
 from src.training.train_classifier import train_classifier
-from src.training.evaluate import evaluate_model
+from src.training.evaluate import evaluate_file_level, evaluate_model
 from src.training.torch_model import load_torch_classifier
 from src.utils.io import load_features, load_labels, resolve_split_path
 from src.inference.predict_audio import predict_audio
@@ -96,8 +96,17 @@ def evaluate_cmd(
     features_path, labels_path = _split_paths(config, split)
     features = load_features(features_path)
     labels = load_labels(labels_path)
-    metrics = evaluate_model(clf, features, labels, le, device)
-    print(metrics)
+    metrics = {
+        'window_level': evaluate_model(clf, features, labels, le, device),
+        'clip_level': evaluate_file_level(
+            clf,
+            Path(config['data_splits_dir']) / f'{split}.csv',
+            config,
+            le,
+            device,
+        ),
+    }
+    print(json.dumps(metrics, indent=2))
 
 
 @app.command(name="run-pipeline")
@@ -143,7 +152,14 @@ def run_pipeline_cmd(config: str = typer.Option("configs/default.yaml", "--confi
         le,
         device,
     )
-    print(json.dumps(metrics, indent=2))
+    file_metrics = evaluate_file_level(
+        clf,
+        Path(config['data_splits_dir']) / 'val.csv',
+        config,
+        le,
+        device,
+    )
+    print(json.dumps({'window_level': metrics, 'clip_level': file_metrics}, indent=2))
 
 @app.command(name="predict-audio")
 def predict_audio_cmd(
